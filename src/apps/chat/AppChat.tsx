@@ -410,7 +410,27 @@ export function AppChat() {
     else if (intent.newChat !== undefined)
       handleConversationNewInFocusedPane(false, false);
   }, [handleConversationNewInFocusedPane, intent.initialConversationId, intent.newChat]);
+// [effect] [custom] Fresh page load: if the restored chat is an idle 'Executive' chat, open a new chat instead
+  const freshLoadCheckDoneRef = React.useRef(false);
+  React.useEffect(() => {
+    // once per page load, and only after the chats are loaded from IndexedDB and a chat is in focus
+    if (freshLoadCheckDoneRef.current || !focusedPaneConversationId || !useChatStore.persist.hasHydrated()) return;
+    freshLoadCheckDoneRef.current = true;
 
+    // respect explicit intents (e.g. a link to a specific chat)
+    if (intent.initialConversationId || intent.newChat !== undefined) return;
+
+    // only for non-empty 'Executive' chats
+    const conversation = getConversation(focusedPaneConversationId);
+    if (!conversation?.messages.length || conversation.systemPurposeId !== 'Executive') return;
+
+    // only if idle for long enough (0 = on every fresh page load)
+    const FRESH_CHAT_AFTER_IDLE_MS = 30 * 60 * 1000; // 30 minutes
+    if (Date.now() - (conversation.updated ?? conversation.created) < FRESH_CHAT_AFTER_IDLE_MS) return;
+
+    // new chat in the focused pane - inherits the 'Executive' persona from the focused chat
+    handleConversationNewInFocusedPane(false, false);
+  }, [focusedPaneConversationId, handleConversationNewInFocusedPane, intent.initialConversationId, intent.newChat]);
 
   // Shortcuts
 
