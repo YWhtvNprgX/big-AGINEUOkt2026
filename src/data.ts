@@ -87,7 +87,7 @@ Current date: {{LocaleNow}}
   },
   Executive: {
     title: 'Executive',
-    description: 'Helps you write business emails',
+    description: 'Start here',
     systemMessage: `You are an AI assistant.
 Knowledge cutoff: {{LLM.Cutoff}}
 Current date: {{LocaleNow}}
